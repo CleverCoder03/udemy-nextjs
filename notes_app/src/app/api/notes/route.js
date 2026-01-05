@@ -28,8 +28,8 @@ export async function GET(){
 export async function POST(request) {
   try {
     await dbConnect();
-    const body = await request.json();
-    const note = await Note.create(body);
+    const {title, content} = await request.json();
+    const note = await Note.create({title, content});
 
     return NextResponse.json(
       {

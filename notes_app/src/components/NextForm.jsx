@@ -5,15 +5,31 @@ import NotesContent from "./NotesContent";
 import toast from "react-hot-toast";
 
 const NextForm = ({ initalNotes }) => {
-    const [notes, setNotes] = useState(initalNotes)
+  const [notes, setNotes] = useState(initalNotes);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const createNote = async function (e) {
-    e.preventDefault();
+  const [editingId, setEditingId] = useState(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
 
-    if (!title.trim() || !content.trim()) return;
+  const startEdit = (note) => {
+    if (loading) return;
+    setEditingId(note._id);
+    setEditTitle(note.title);
+    setEditContent(note.content);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditTitle("");
+    setEditContent("");
+  };
+
+  const createNote = async (e) => {
+    e.preventDefault();
+    if (!title.trim() || !content.trim() || loading) return;
 
     setLoading(true);
     try {
@@ -25,39 +41,80 @@ const NextForm = ({ initalNotes }) => {
 
       const result = await response.json();
 
-      if(result.success) {
-        setNotes(prev => [result.data, ...prev])
-        setLoading(false);
+      if (result.success) {
+        setNotes((prev) => [result.data, ...prev]);
         setTitle("");
         setContent("");
-        toast.success("Notes created successfully")
+        toast.success("Notes created successfully");
+      } else {
+        toast.error("Failed to create note");
       }
     } catch (error) {
       console.error("Error creating notes", error);
-      toast.error("Something went wrong")
+      toast.error("Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const deleteNote = async function (id) {
+  const deleteNote = async (id) => {
+    if (loading) return;
+
     try {
       const response = await fetch(`/api/notes/${id}`, {
         method: "DELETE",
       });
 
-      const result = await response.json()
+      const result = await response.json();
 
-      if(result.success) {
-        setNotes(prev => prev.filter(note=> note._id !== id))
-        return toast.success("Notes deleted successfully")
+      if (result.success) {
+        setNotes((prev) => prev.filter((note) => note._id !== id));
+        toast.success("Notes deleted successfully");
+      } else {
+        toast.error("Failed to delete note");
       }
     } catch (error) {
-      console.log("Something went wrong");
+      console.error("Delete error", error);
       toast.error("Error deleting notes");
+    }
+  };
+
+  const updateNote = async (id) => {
+    if (!editTitle.trim() || !editContent.trim() || loading) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/notes/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: editTitle,
+          content: editContent,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setNotes((prev) =>
+          prev.map((note) => (note._id === id ? result.data : note))
+        );
+        cancelEdit();
+        toast.success("Notes updated successfully");
+      } else {
+        toast.error("Failed to update note");
+      }
+    } catch (error) {
+      console.error("Update error", error);
+      toast.error("Error updating the notes");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="mt-8">
+      {/* Create Note */}
       <div className="p-6 w-full bg-white/90 mt-5 rounded-md">
         <form
           onSubmit={createNote}
@@ -74,28 +131,42 @@ const NextForm = ({ initalNotes }) => {
               onChange={(e) => setTitle(e.target.value)}
             />
           </div>
+
           <div className="mt-5">
             <label htmlFor="content">Content</label>
             <textarea
-              name=""
               id="content"
               className="ring-1 border border-gray-200 w-full rounded-md p-2 text-gray-700 resize-none h-[30vh]"
               placeholder="Content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
-            ></textarea>
+            />
           </div>
+
           <button
             type="submit"
-            className="bg-[crimson] py-2 px-8 rounded-md mt-2 text-white font-semibold disabled:opacity-50"
             disabled={loading}
+            className="bg-[crimson] py-2 px-8 rounded-md mt-2 text-white font-semibold disabled:opacity-50"
           >
             {loading ? "Loading..." : "Submit"}
           </button>
         </form>
       </div>
+
+      {/* Notes */}
       <div className="mt-15">
-        <NotesContent notes={notes} onDelete={deleteNote}/>
+        <NotesContent
+          notes={notes}
+          onDelete={deleteNote}
+          onEdit={startEdit}
+          onUpdate={updateNote}
+          editingID={editingId}
+          editTitle={editTitle}
+          editContent={editContent}
+          setEditTitle={setEditTitle}
+          setEditContent={setEditContent}
+          cancelEdit={cancelEdit}
+        />
       </div>
     </div>
   );
