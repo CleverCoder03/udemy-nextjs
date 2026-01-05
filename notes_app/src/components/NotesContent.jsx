@@ -2,10 +2,9 @@
 
 import { Pencil, Trash2, Plus, StickyNote, Calendar } from "lucide-react";
 
-const NotesContent = ({ notes }) => {
-
+const NotesContent = ({ notes, onDelete }) => {
   const formatDate = (date) =>
-  new Intl.DateTimeFormat("en-GB").format(new Date(date));
+    new Intl.DateTimeFormat("en-GB").format(new Date(date));
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-gray-100 py-6 md:py-12 font-sans">
@@ -20,7 +19,7 @@ const NotesContent = ({ notes }) => {
               {notes.length} Total Notes
             </p>
           </div>
-          
+
           <button className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-lg shadow-blue-900/20 active:scale-95">
             <Plus size={20} /> Create Note
           </button>
@@ -55,7 +54,7 @@ const NotesContent = ({ notes }) => {
                     <Calendar size={12} />
                     <span>Created: {formatDate(note.createdAt)}</span>
                   </div>
-                  
+
                   {note.updatedAt !== note.createdAt && (
                     <div className="text-[11px] font-medium uppercase tracking-wider text-blue-500/60 pl-5">
                       Updated: {formatDate(note.updatedAt)}
@@ -68,7 +67,10 @@ const NotesContent = ({ notes }) => {
                   <button className="flex-1 flex items-center justify-center gap-2 bg-[#1f1f1f] hover:bg-blue-600 text-gray-300 hover:text-white py-2.5 rounded-lg transition-all text-xs font-bold border border-gray-700 hover:border-blue-500">
                     <Pencil size={14} /> EDIT
                   </button>
-                  <button className="flex-1 flex items-center justify-center gap-2 bg-[#1f1f1f] hover:bg-red-600 text-gray-300 hover:text-white py-2.5 rounded-lg transition-all text-xs font-bold border border-gray-700 hover:border-red-500">
+                  <button
+                    onClick={() => onDelete(note._id)}
+                    className="flex-1 flex items-center justify-center gap-2 bg-[#1f1f1f] hover:bg-red-600 text-gray-300 hover:text-white py-2.5 rounded-lg transition-all text-xs font-bold border border-gray-700 hover:border-red-500"
+                  >
                     <Trash2 size={14} /> DELETE
                   </button>
                 </div>

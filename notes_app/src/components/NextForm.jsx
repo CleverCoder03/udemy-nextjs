@@ -26,7 +26,7 @@ const NextForm = ({ initalNotes }) => {
       const result = await response.json();
 
       if(result.success) {
-        setNotes([result.data, ...notes])
+        setNotes(prev => [result.data, ...prev])
         setLoading(false);
         setTitle("");
         setContent("");
@@ -35,6 +35,24 @@ const NextForm = ({ initalNotes }) => {
     } catch (error) {
       console.error("Error creating notes", error);
       toast.error("Something went wrong")
+    }
+  };
+
+  const deleteNote = async function (id) {
+    try {
+      const response = await fetch(`/api/notes/${id}`, {
+        method: "DELETE",
+      });
+
+      const result = await response.json()
+
+      if(result.success) {
+        setNotes(prev => prev.filter(note=> note._id !== id))
+        return toast.success("Notes deleted successfully")
+      }
+    } catch (error) {
+      console.log("Something went wrong");
+      toast.error("Error deleting notes");
     }
   };
 
@@ -77,7 +95,7 @@ const NextForm = ({ initalNotes }) => {
         </form>
       </div>
       <div className="mt-15">
-        <NotesContent notes={notes} />
+        <NotesContent notes={notes} onDelete={deleteNote}/>
       </div>
     </div>
   );
